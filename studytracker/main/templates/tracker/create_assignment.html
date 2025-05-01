@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Новое задание{% endblock %}
+
+{% block style %}
+.assignment-form {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.assignment-form h2 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.assignment-form form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.assignment-form input[type="text"],
+.assignment-form input[type="file"],
+.assignment-form textarea,
+.assignment-form select {
+    width: 100%;
+    padding: 0.6rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.assignment-form button {
+    background-color: #2c3e50;
+    color: white;
+    border: none;
+    padding: 0.6rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    align-self: flex-start;
+}
+
+.assignment-form button:hover {
+    background-color: #1a252f;
+}
+
+.assignment-form a {
+    display: inline-block;
+    margin-top: 1rem;
+    color: #3498db;
+    text-decoration: none;
+}
+
+.assignment-form a:hover {
+    text-decoration: underline;
+}
+{% endblock %}
+
+{% block content %}
+<div class="assignment-form">
+  <h2>Создать задание</h2>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Создать</button>
+  </form>
+  <a href="{% url 'tracker' %}">← Назад</a>
+</div>
+{% endblock %}

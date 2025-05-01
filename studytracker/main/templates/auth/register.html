@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Регистрация{% endblock %}
+
+{% block style %}
+.register-container {
+    max-width: 400px;
+    margin: 3rem auto;
+    padding: 2rem;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.register-container h2 {
+    text-align: center;
+    margin-bottom: 1.2rem;
+    color: #2c3e50;
+}
+
+.register-container form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+}
+
+.register-container input[type="text"],
+.register-container input[type="password"],
+.register-container input[type="email"],
+.register-container button {
+    width: 100%;
+    padding: 0.6rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.register-container button {
+    background-color: #2c3e50;
+    color: white;
+    border: none;
+    transition: background-color 0.3s;
+}
+
+.register-container button:hover {
+    background-color: #1a252f;
+}
+
+.register-container a {
+    color: #3498db;
+    text-decoration: none;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.register-container a:hover {
+    text-decoration: underline;
+}
+
+.error-message {
+    margin-top: 1rem;
+    color: red;
+    font-weight: bold;
+    text-align: center;
+}
+{% endblock %}
+
+{% block content %}
+<div class="register-container">
+    <h2>Регистрация</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Зарегистрироваться</button>
+    </form>
+    <p style="text-align: center;">Уже есть аккаунт? <a href="{% url 'login' %}">Войти</a></p>
+    {% if form.errors %}
+        <div class="error-message">Пожалуйста, исправьте ошибки в форме.</div>
+    {% endif %}
+</div>
+{% endblock %}

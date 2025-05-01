@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Трекер{% endblock %}
+
+{% block style %}
+.tracker-container a.add-btn {
+    display: inline-block;
+    margin-bottom: 1rem;
+    background-color: #2c3e50;
+    color: white;
+    padding: 0.6rem 1rem;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.tracker-container a.add-btn:hover {
+    background-color: #1a252f;
+}
+
+.assignment-list, .completed-table {
+    margin-bottom: 2rem;
+}
+
+.assignment-item {
+    background-color: #fefefe;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.assignment-item-actions a,
+.assignment-item-actions form {
+    margin-left: 0.5rem;
+    display: inline-block;
+}
+
+.assignment-item-actions button {
+    background-color: #e74c3c;
+    border: none;
+    color: white;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.assignment-item-actions button:hover {
+    background-color: #c0392b;
+}
+
+.completed-table table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.completed-table th,
+.completed-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+{% endblock %}
+
+{% block content %}
+<div class="tracker-container">
+    <a href="{% url 'create_assignment' %}" class="add-btn">Добавить задание</a>
+
+    <h3>Активные задания</h3>
+    <div class="assignment-list">
+        {% if active_assignments %}
+            {% for submission in active_assignments %}
+                <div class="assignment-item">
+                    <div>
+                        <strong>{{ submission.assignment.title }}</strong>
+                        <span> | Курс: {{ submission.assignment.course.title }}</span>
+                    </div>
+                    <div class="assignment-item-actions">
+                        <a href="{% url 'edit_submission' submission.id %}">Редактировать</a>
+                        <form method="post" action="{% url 'delete_assignment' assignment_id=submission.assignment.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit">Удалить</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>Нет активных заданий.</p>
+        {% endif %}
+    </div>
+
+    <h3>Завершённые задания</h3>
+    <div class="completed-table">
+        {% if completed_assignments %}
+            <table>
+                <tr>
+                    <th>Задание</th>
+                    <th>Оценка</th>
+                    <th>Дата сдачи</th>
+                </tr>
+                {% for submission in completed_assignments %}
+                    <tr>
+                        <td>{{ submission.assignment.title }}</td>
+                        <td>{{ submission.grade|default:"—" }}</td>
+                        <td>{{ submission.submitted_at|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        {% else %}
+            <p>Нет завершённых заданий.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
