@@ -75,12 +75,13 @@
     <div class="assignment-list">
         {% if active_assignments %}
             {% for submission in active_assignments %}
-                <div class="assignment-item">
-                    <div>
+                <div class="assignment-item" style="position: relative;">
+                    <a href="{% url 'assignment_detail' pk=submission.assignment.id %}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1;"></a>
+                    <div style="position: relative; z-index: 2;">
                         <strong>{{ submission.assignment.title }}</strong>
                         <span> | Курс: {{ submission.assignment.course.title }}</span>
                     </div>
-                    <div class="assignment-item-actions">
+                    <div class="assignment-item-actions" style="position: relative; z-index: 2;">
                         <a href="{% url 'edit_submission' submission.id %}">Редактировать</a>
                         <form method="post" action="{% url 'delete_assignment' assignment_id=submission.assignment.id %}" style="display:inline;">
                             {% csrf_token %}

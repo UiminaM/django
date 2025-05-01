@@ -1,9 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, authenticate, logout
-from .forms import StudentRegistrationForm, StudentLoginForm, AssignmentCreateForm, AssignmentEditForm, SubmissionEditForm
+from django.contrib.auth import login, logout
+from .forms import StudentRegistrationForm, StudentLoginForm, \
+    AssignmentCreateForm, AssignmentEditForm, SubmissionEditForm
 from django.contrib.auth.decorators import login_required
 from .models import Course, Assignment, Submission
 from django.db.models import Avg, Max, Min, Count
+from django.views.generic import DetailView
+
 
 def index(request):
     courses = Course.objects.all()
@@ -45,8 +48,12 @@ def logout_view(request):
 def tracker_view(request):
     student = request.user
 
-    active_assignments = Submission.objects.filter(student=student, submitted_at__isnull=True)
-    completed_assignments = Submission.objects.filter(student=student, submitted_at__isnull=False)
+    active_assignments = Submission.objects.select_related(
+        'assignment', 'assignment__course'
+    ).filter(student=student, submitted_at__isnull=True)
+
+    completed_assignments = Submission.objects\
+        .filter(student=student, submitted_at__isnull=False)
 
     return render(request, 'tracker/tracker.html', {
         'student': student,
@@ -61,25 +68,31 @@ def create_assignment(request):
         form = AssignmentCreateForm(request.POST, request.FILES)
         if form.is_valid():
             assignment = form.save()
-            Submission.objects.create(student=request.user, assignment=assignment)
+            Submission.objects.create(student=request.user,
+                                      assignment=assignment)
             return redirect('tracker')
     else:
         form = AssignmentCreateForm()
     return render(request, 'tracker/create_assignment.html', {'form': form})
 
+
 @login_required
 def edit_submission(request, submission_id):
-    submission = get_object_or_404(Submission, id=submission_id, student=request.user)
+    submission = get_object_or_404(Submission, id=submission_id,
+                                   student=request.user)
     assignment = submission.assignment
 
     if request.method == 'POST':
-        assignment_form = AssignmentEditForm(request.POST, request.FILES, instance=assignment)
-        submission_form = SubmissionEditForm(request.POST, instance=submission)
+        assignment_form = AssignmentEditForm(request.POST,
+                                             request.FILES,
+                                             instance=assignment)
+        submission_form = SubmissionEditForm(request.POST,
+                                             instance=submission)
         if assignment_form.is_valid() and submission_form.is_valid():
             assignment_form.save()
             sub = submission_form.save(commit=False)
             if sub.grade and sub.submitted_at:
-                sub.submitted_at = sub.submitted_at  # если дата вручную указана
+                sub.submitted_at = sub.submitted_at
             sub.save()
             return redirect('tracker')
     else:
@@ -100,18 +113,28 @@ def delete_assignment(request, assignment_id):
     return redirect('tracker')
 
 
+class AssignmentDetailView(DetailView):
+    model = Assignment
+    template_name = 'tracker/assignment_detail.html'
+    context_object_name = 'assignment'
+
+
 @login_required
 def statistics_view(request):
     student = request.user
 
-    # Завершённые задания (есть оценка)
-    completed_submissions = Submission.objects.filter(student=student, grade__isnull=False)
+    completed_submissions = Submission.objects.filter(student=student,
+                                                      grade__isnull=False)
 
-    total_completed = completed_submissions.count()
-    max_grade = completed_submissions.aggregate(Max('grade'))['grade__max']
-    min_grade = completed_submissions.aggregate(Min('grade'))['grade__min']
+    aggregates = completed_submissions.aggregate(
+        max_grade=Max('grade'),
+        min_grade=Min('grade'),
+        total_completed=Count('id')
+    )
+    max_grade = aggregates['max_grade']
+    min_grade = aggregates['min_grade']
+    total_completed = aggregates['total_completed']
 
-    # Средняя оценка по каждому курсу
     course_stats = completed_submissions.values(
         'assignment__course__title'
     ).annotate(
